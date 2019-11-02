@@ -1,0 +1,33 @@
+﻿//-------------------------------------------
+//This project is used in.
+//-------------------------------------------
+// IAI projects 
+//-------------------------------------------
+ProEvent.Server(Discontinued)
+	- Logging.LogHandling(Discontinued)
+	- ErrorHandling.
+	- time.
+Proevent.Client
+	- Forms.Passwords.
+	- Forms.MessegeBoxes.
+	- Logging.LogHandling(Discontinued)
+	- Time.
+	- Components/Controls.
+ProEvent.Server2
+	- logging.Log
+	- Controls
+	- EvetArgs
+	- networking.Async
+	- networking
+//-------------------------------------------
+// Personal project.
+//-------------------------------------------
+Project.Manager2 (Discontinued)
+	- Exeptions.
+	- Components.
+	- Compares.TreeNodeSorting.
+	- Forms.InputBoxes.
+Project.Manager2.5
+	- Logging.
+	- Control's
+	- 

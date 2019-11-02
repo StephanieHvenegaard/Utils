@@ -1,0 +1,12 @@
+C:\Users\sh.NT-DOMAIN\Documents\Visual Studio 2013\Projects\SHUtils\SHUtils\bin\Debug\GeneralUtillites.dll
+C:\Users\sh.NT-DOMAIN\Documents\Visual Studio 2013\Projects\SHUtils\SHUtils\bin\Debug\GeneralUtillites.pdb
+C:\Users\sh.NT-DOMAIN\Documents\Visual Studio 2013\Projects\SHUtils\SHUtils\obj\x86\Debug\SHUtils.Controls.CheckListBox.resources
+C:\Users\sh.NT-DOMAIN\Documents\Visual Studio 2013\Projects\SHUtils\SHUtils\obj\x86\Debug\SHUtils.Forms.InputBoxes.OneLineInputbox.resources
+C:\Users\sh.NT-DOMAIN\Documents\Visual Studio 2013\Projects\SHUtils\SHUtils\obj\x86\Debug\SHUtils.Forms.MessegeBoxes.AutoResizeMessageBox.resources
+C:\Users\sh.NT-DOMAIN\Documents\Visual Studio 2013\Projects\SHUtils\SHUtils\obj\x86\Debug\SHUtils.Forms.InputBoxes.NoteBox.resources
+C:\Users\sh.NT-DOMAIN\Documents\Visual Studio 2013\Projects\SHUtils\SHUtils\obj\x86\Debug\SHUtils.Forms.Passwords.Passwordbox.resources
+C:\Users\sh.NT-DOMAIN\Documents\Visual Studio 2013\Projects\SHUtils\SHUtils\obj\x86\Debug\SHUtils.Properties.Resource.resources
+C:\Users\sh.NT-DOMAIN\Documents\Visual Studio 2013\Projects\SHUtils\SHUtils\obj\x86\Debug\SHUtils.csproj.GenerateResource.Cache
+C:\Users\sh.NT-DOMAIN\Documents\Visual Studio 2013\Projects\SHUtils\SHUtils\obj\x86\Debug\GeneralUtillites.dll
+C:\Users\sh.NT-DOMAIN\Documents\Visual Studio 2013\Projects\SHUtils\SHUtils\obj\x86\Debug\GeneralUtillites.pdb
+C:\Users\sh.NT-DOMAIN\Documents\Visual Studio 2013\Projects\SHUtils\SHUtils\obj\x86\Debug\SHUtils.csprojResolveAssemblyReference.cache

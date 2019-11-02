@@ -1,0 +1,446 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+using System.Drawing;
+using System.Text.RegularExpressions;
+using SHUtils.Mathematics;
+
+namespace SHUtils.Controls
+{
+    /**********************************
+    * Used in
+    * Projectmaneger 2.5
+    *********************************/
+    public partial class CheckListItem : Control, IEquatable<CheckListItem>
+    {
+        // fields
+        //------------------------------------------------------------------------------------------
+        private int _Completeness = 0;
+        private string _Titel = "";
+        private string _Description = "";
+        private bool _ShowDecription = false;
+        private bool _Selected = false;
+        //private int _DEBUGOnDrawCounter = 0;
+        // BuilderBrushes. 
+        //------------------------------------------------------------------------------------------
+        private int _BorderSize = 6;// padding around all the controls
+        private int _Spacing = 6;// Pacing between controls
+        private int _CheckedBoxWidth =26;
+        private int _CheckedBoxHeight = 26;
+        private Rectangle _CheckedBoxRectangle
+        {
+            get { return new Rectangle(new Point(_BorderSize, _BorderSize), new Size(_CheckedBoxWidth, _CheckedBoxHeight)); }
+        }
+        //private Color _CheckedBoxborderColor = Color.Red;
+        private int _TitleBoxWidth { get { return this.Width - _Spacing - GetBorder() - _CheckedBoxWidth-_DropdownBoxWidth; } }
+        private int _TitleBoxHeight { get { return _CheckedBoxHeight; } }
+        private Rectangle _TitleBoxRectangle
+        {
+            get { return new Rectangle(new Point(_BorderSize+ _Spacing + _CheckedBoxWidth, _BorderSize), new Size(_TitleBoxWidth, _TitleBoxHeight)); }
+        }
+        private int _DropdownBoxWidth { get { return 20; } }
+        private int _DropdownBoxHeight { get { return _CheckedBoxHeight; } }
+        private Rectangle _dropdownBoxRectangle
+        {
+            get { return new Rectangle(new Point(_BorderSize + _Spacing + _CheckedBoxWidth + _TitleBoxWidth, _BorderSize), new Size(_DropdownBoxWidth, _DropdownBoxHeight)); }
+        }
+        private int _DescriptionBoxWidth { get { return _DescriptionTextWidth + (_Spacing*2); } }
+        private int _DescriptionBoxHeight { get { return _DescriptionTextHeight + (_Spacing*2) ; } }
+        private Rectangle _DescriptionBoxRectangle
+        {
+            get
+            {
+                return new Rectangle(new Point(_BorderSize, _BorderSize + _Spacing + _CheckedBoxHeight),
+                                     new Size(_DescriptionBoxWidth, _DescriptionBoxHeight));
+            }
+        }
+        private int _DescriptionTextWidth { get { return this.Width - (_Spacing*2) - GetBorder(); } }
+        private int _DescriptionTextHeight
+        {
+            get
+            {
+                SizeF TextSize = TextRenderer.MeasureText(_Description, this.Font, new Size(_DescriptionBoxWidth - _Spacing, 1000),
+                    TextFormatFlags.Left |
+                    TextFormatFlags.WordBreak |
+                    TextFormatFlags.GlyphOverhangPadding);
+                return Convert.ToInt32(TextSize.Height);
+
+            }
+        }
+        private Rectangle _DescriptionTextRectangle
+        {
+            get
+            {
+                return new Rectangle(new Point(_BorderSize+_Spacing, _BorderSize + (_Spacing*2) + _CheckedBoxHeight),
+                                     new Size(_DescriptionTextWidth, _DescriptionTextHeight));
+            }
+        }
+         // Construktors
+        //------------------------------------------------------------------------------------------
+        public CheckListItem() : this("Test", "testing", 50) { }
+        public CheckListItem(string title, string description) : this(title, description, 0) { }
+        public CheckListItem(string title,string description,int completeness)
+        {
+            _Titel = title;
+            _Description = description;
+            _Completeness = completeness;
+            _ShowDecription = false;
+            //if (Completed)
+            //{
+            //    this._CheckedBoxborderColor = Color.Pink;
+            //}
+            this.Font = new Font(FontFamily.GenericSansSerif,12F, GraphicsUnit.Pixel);
+            this.MouseClick += CheckListItem_MouseClick;
+            this.MouseDoubleClick += CheckListItem_MouseDoubleClick;
+        }
+        // EventHandlers
+        //------------------------------------------------------------------------------------------
+        void CheckListItem_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            if (IsWithinBounds(e, _dropdownBoxRectangle))
+            {
+                if (_ShowDecription)
+                {
+                    _ShowDecription = false;
+                   
+                }
+                else
+                {
+                   
+                    _ShowDecription = true;
+                }
+                SetNewSize();
+                OnClickDesription();
+                Invalidate();
+            }
+            else
+            {
+                CheckListItem_MouseClick(sender, e);
+            }
+           
+        }
+        void CheckListItem_MouseClick(object sender, MouseEventArgs e)
+        {
+            //did the User Hit The check Box.
+            if (IsWithinBounds(e, _CheckedBoxRectangle))
+            {
+                if (e.Button == MouseButtons.Left)
+                {
+                    if (!Completed)
+                    {
+                        _Completeness += 10;
+                    }
+                    else
+                    {
+                        _Completeness = 0;
+                    }
+                    Invalidate();
+                }
+                else if (e.Button == MouseButtons.Right)
+                {
+                    if (_Completeness != 100)
+                    {
+                        _Completeness = 100;
+                        Invalidate();
+                    }
+                }
+                OnCompletenessChanged();
+            }
+            //if (Completed)
+            //{
+            //    this._CheckedBoxborderColor = Color.Pink;
+            //    Invalidate();
+            //}
+            //else
+            //{
+            //    if (this._CheckedBoxborderColor != Color.Red)
+            //    {
+            //        this._CheckedBoxborderColor = Color.Red;
+            //        Invalidate();
+            //    }
+            //}
+           
+        } 
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            SetNewSize();
+            this.BackColor = Parent.BackColor;
+            #region CheckBox
+            // Check Mark
+            if (Completed)
+            {
+                Bitmap i = Properties.Resource.CheckedMark;
+                e.Graphics.DrawImage(i, _CheckedBoxRectangle.Location);
+            }
+            else
+            //CheckBox text
+            {
+                TextRenderer.DrawText(e.Graphics, _Completeness.ToString(), this.Font, _CheckedBoxRectangle, this.ForeColor, this.BackColor,
+                                        TextFormatFlags.HorizontalCenter |
+                                        TextFormatFlags.VerticalCenter |
+                                        TextFormatFlags.NoPadding);
+            }
+            ControlPaint.DrawBorder3D(e.Graphics, this._CheckedBoxRectangle, Border3DStyle.Flat);
+            #endregion
+            #region Title
+            //e.Graphics.DrawRectangle(new Pen(new SolidBrush(Color.Green), 1.0F), _TitleBoxRectangle);
+            ControlPaint.DrawBorder3D(e.Graphics, this._TitleBoxRectangle, Border3DStyle.Flat);
+            TextRenderer.DrawText(e.Graphics, _Titel/*+" : " +_DEBUGOnDrawCounter.ToString()*/, this.Font, _TitleBoxRectangle, this.ForeColor, this.BackColor,
+                                  TextFormatFlags.HorizontalCenter |
+                                  TextFormatFlags.VerticalCenter | 
+                                  TextFormatFlags.NoPadding);
+            #endregion
+            #region Dropdown
+            //e.Graphics.DrawRectangle(new Pen(new SolidBrush(Color.Blue), 1.0F), _dropdownBoxRectangle);
+            ControlPaint.DrawBorder3D(e.Graphics, this._dropdownBoxRectangle, Border3DStyle.Flat);
+            #endregion
+            #region Description
+            if (_ShowDecription)
+            {
+                ControlPaint.DrawBorder3D(e.Graphics, this._DescriptionBoxRectangle, Border3DStyle.Flat);
+                //e.Graphics.DrawRectangle(new Pen(new SolidBrush(Color.Black), 1.0F), _DescriptionBoxRectangle);
+                e.Graphics.DrawRectangle(new Pen(new SolidBrush(Color.RoyalBlue), 1.0F), _DescriptionTextRectangle);
+                TextRenderer.DrawText(e.Graphics, _Description, this.Font, _DescriptionTextRectangle, this.ForeColor, this.BackColor,
+                       TextFormatFlags.Left |
+                       TextFormatFlags.VerticalCenter |
+                       //TextFormatFlags.Internal |
+                       TextFormatFlags.WordBreak|
+                       TextFormatFlags.NoPadding);
+            }
+       /*     else
+            {
+                SizeF TextSize = e.Graphics.MeasureString(_Description, this.Font, _DescriptionBoxWidth);
+                _DescriptionTextHeight =Convert.ToInt32(TextSize.Height+_Spacing);
+            }*/
+            #endregion
+           // _DEBUGOnDrawCounter++;
+
+            if (_Selected) e.Graphics.DrawRectangle(new Pen(new SolidBrush(SystemColors.Highlight), 1.0F),new Rectangle(this.ClientRectangle.Location,new Size(this.ClientRectangle.Size.Width-1,this.ClientRectangle.Size.Height-1)));
+            else ControlPaint.DrawBorder3D(e.Graphics, this.ClientRectangle, Border3DStyle.Flat);
+        }
+        // Events
+        //------------------------------------------------------------------------------------------
+        public event EventHandler ClickDescription;
+        public event EventHandler CompletenessChanged;
+        // Events Activators
+        //------------------------------------------------------------------------------------------
+        protected virtual void OnClickDesription()
+        {
+            if(ClickDescription != null)
+            {
+                ClickDescription(this, new EventArgs());
+            }
+        }
+        protected virtual void OnCompletenessChanged()
+        {
+            if (CompletenessChanged != null)
+            {
+                CompletenessChanged(this, new EventArgs());
+            }
+        }
+        // Properties
+        //------------------------------------------------------------------------------------------
+        [Category("Appearance")]
+        public virtual string Title { get { return _Titel; } }
+        [Category("Appearance")]
+        public virtual string Description { get { return _Description; } }
+        [Category("Appearance")]
+        public virtual bool Completed { get {return _Completeness == 100;} }
+        [Category("Appearance")]
+        public virtual int Completeness { get { return _Completeness; }}
+        public virtual bool Selected { get { return _Selected; } set { _Selected = value; Invalidate(); } }  
+        public override Size MinimumSize
+        {
+            get
+            {
+               return new Size(50, GetBorder() + _CheckedBoxHeight );
+            }
+            set
+            {
+                base.MinimumSize = value;
+            }
+        }
+        // General Functions
+        //------------------------------------------------------------------------------------------     
+        private int GetBorder()
+        {
+            return 2 * _BorderSize;
+        }       
+        private bool IsWithinBounds(MouseEventArgs e,Rectangle bounds)
+        {
+            if (e.X >= bounds.Location.X && e.X <= (bounds.Location.X + bounds.Width) &&
+               e.Y <= (this.Size.Height - (_BorderSize)) && e.Y >= (_BorderSize)) return true;
+            else return false;            
+        }
+        private void SetNewSize()
+        {
+            if (_ShowDecription) this.Size = new Size(this.Width, this.MinimumSize.Height + _DescriptionBoxHeight + _BorderSize);
+            else this.Size = new Size(this.Width, this.MinimumSize.Height);
+        }
+        public bool Equals(CheckListItem other)
+        {
+            if (this._Titel != other._Titel) return false;
+            if (this._Description!= other._Description) return false;
+            if (this._Completeness != other._Completeness) return false;
+            return true;
+        }
+    }
+}
+//    public partial class CheckListItem : Control
+//    {
+//        // private variables
+//        CheckBox cb = new CheckBox();
+//        TextBox tb = new TextBox();
+
+//        //Constructors 
+//        public CheckListItem()
+//        {
+//            InitializeComponent();
+//            InitializeControl("", "", false);
+//        }
+//        public CheckListItem(string name,string description)
+//        {
+//            InitializeComponent();
+//            InitializeControl(name,description, false);
+//        }
+//        public CheckListItem(string name, string description,bool check)
+//        {
+//            InitializeComponent();
+//            InitializeControl(name, description, check);
+//        }
+       
+//        // public browserable property's
+//        public override string Text { set { cb.Text = value; } get { return cb.Text; } }
+//        [Category("Appearance")]
+//        public string Description { set { tb.Text = value; } get { return tb.Text; } }
+
+//        // Methods
+//        private void InitializeControl(string name, string description,bool check)
+//        {
+//            Font fFont  = new Font("Microsoft Sans Serif", 12);
+//            //cb = new CheckBox();
+//            cb.Text = name;
+//            cb.Checked = check;
+//            cb.Font= fFont;
+
+//            //tb = new TextBox();
+//            tb.Text = description;
+//            tb.Font = fFont;
+//            tb.Multiline = true;
+//            //tb.WordWrap = true;
+//            RenderControl();          
+//        }
+//        private int MeasureTextWidth(string text)
+//        {
+//            return TextRenderer.MeasureText(text, tb.Font).Width;
+//        }
+//        private void RenderControl()
+//        {
+//            int width = 100;
+//            if (Parent != null)
+//            {
+//                try
+//                {
+//                    CheckListBox cl = (CheckListBox)Parent;
+//                    width = cl.GetItemAreaWidth;
+//                }
+//                catch {/* dont care why it failed just that it did */}
+//            }
+
+//            this.Controls.Clear();
+//            cb.Location = new Point(10, 20 - (cb.Size.Height / 2));
+
+//            tb.Location = new Point(10, 30 - (cb.Size.Height / 2)+cb.Height);
+//            tb.Width = this.ClientRectangle.Width - 20;
+
+//            tb.Text= CalculateDescriptionLines(tb.Text);
+
+//            tb.Height = (tb.Lines.Count() * 20)+6;// Formula each line is 20 with a font size of 12, and there is 3*2 pace at top and bottem
+            
+//            this.Size = new System.Drawing.Size(width, 30+cb.Height+tb.Height);
+//            this.Controls.Add(cb);
+//            this.Controls.Add(tb);
+//        }
+//        private string CalculateDescriptionLines(string lines)
+//        {
+//            //Clean
+//            try
+//            {
+//                lines = Regex.Replace(lines, "\r\n", " ");
+//                string[] Words = lines.Split(' ');
+//                lines = "";
+//                foreach (string s in Words)
+//                {
+//                    lines += s + " ";
+//                }
+//                lines = lines.Trim();
+//                int iLinespixLength = MeasureTextWidth(lines);
+//                if (iLinespixLength > tb.Width - 6 && tb.Width > 0)
+//                {
+//                    int averagecharsize = NumberConvertion.RoundToHighestInt(iLinespixLength / lines.ToCharArray().Length);
+
+//                    double dnoofcharsintext = ((tb.Width - 6) / averagecharsize);
+
+//                    int numberoflines = NumberConvertion.RoundToHighestInt((lines.Length) / dnoofcharsintext);
+//                    int PerLine = NumberConvertion.RoundToHighestInt(lines.Length / numberoflines);
+//                    Words = new string[numberoflines];
+//                    for (int i = 0; i < numberoflines; i++)
+//                    {
+//                        if (i == (numberoflines - 1)) 
+//                            Words[i] = lines.Substring(PerLine * (i+1),lines.Length-PerLine * (i+1));
+//                        else Words[i] = lines.Substring(PerLine * i, PerLine);
+//                    }
+//                    lines = "";
+//                    for(int i = 0; i< Words.Length;i++)
+//                    {
+//                        if (i != (Words.Length - 1))
+//                        {
+//                            char[] c = Words[i].ToCharArray();
+//                            if (c[c.Length - 1] != ' ')
+//                            {
+//                                for (int ci = c.Length - 1; ci > 0; ci--)
+//                                {
+//                                    if (c[ci] != ' ')
+//                                    {
+//                                        Words[i + 1] = c[ci] + Words[i + 1];
+//                                    }
+//                                    else
+//                                    {
+//                                        Words[i] = Words[i].Substring(0, ci);
+//                                        break;
+//                                    }
+//                                }            
+//                            }
+//                        }                        
+//                        lines += Words[i].Trim() + "\r\n";
+//                    }
+//                    lines.Trim();
+//                }
+//                return lines;
+//            }
+//            catch(Exception e)
+//            {
+//                MessageBox.Show(e.Message);
+//                return "";
+//            }
+//        }
+//        protected override void OnPaint(PaintEventArgs e)
+//        {
+//            //SizeF stringSize = pe.Graphics.MeasureString(GroupeName, lRadioGroupeName.Font);
+//            //RepositionAllControls(Convert.ToInt16(stringSize.Height));
+//            base.OnPaint(e);
+//            Rectangle borderRectangle = this.ClientRectangle;
+//            //borderRectangle.Inflate(-10, -10);
+//            ControlPaint.DrawBorder3D(e.Graphics, borderRectangle, Border3DStyle.Sunken);
+//        }
+//        public override void Refresh()
+//        {
+//            RenderControl();
+//            base.Refresh();
+//        }
+//    }
+//}
